@@ -19,6 +19,9 @@ const BRANCHES = [
   ['81.30', 'Paysagistes & jardins'], ['81', 'Nettoyage & entretien'], ['85.53', 'Auto-écoles'],
   ['93', 'Sport & loisirs'], ['95', 'Réparation'], ['75', 'Vétérinaires & animaux'], ['96.09', 'Services à la personne'],
 ];
+// Associations, syndicats, holdings, location de biens propres : pas de vitrine à vendre.
+export const EXCLUDED = /^(94|70\.10|68\.20|35\.11)/;
+
 export function branchOf(naf = '') {
   let best = ['', 'Autres'];
   for (const b of BRANCHES) if (naf.startsWith(b[0]) && b[0].length > best[0].length) best = b;
@@ -63,6 +66,7 @@ async function fromRegistry() {
           if (e.etat_administratif !== 'A' || !e.code_postal?.startsWith(DEPT)) continue;
           const name = e.liste_enseignes?.[0] || e.nom_commercial || u.nom_complet;
           const naf = e.activite_principale || u.activite_principale;
+          if (EXCLUDED.test(naf)) continue;
           out.set(e.siret, {
             id: e.siret, name, legalName: u.nom_complet, naf, branch: branchOf(naf),
             address: e.adresse, city: e.libelle_commune, lat: +e.latitude || null, lon: +e.longitude || null,

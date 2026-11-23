@@ -20,3 +20,9 @@ test('modèle de site : échappe le HTML', () => {
   const html = templateSite({ name: '<script>x</script>', city: 'Langres', branch: 'Autres', address: '1 rue' });
   assert.ok(!html.includes('<script>x'));
 });
+
+test('exclusions : associations et holdings', async () => {
+  const { EXCLUDED } = await import('./collect.mjs');
+  assert.ok(EXCLUDED.test('94.99Z') && EXCLUDED.test('70.10Z'));
+  assert.ok(!EXCLUDED.test('56.10A'));
+});
