@@ -1,0 +1,5 @@
+node_modules/
+.env
+sites/*
+!sites/.gitkeep
+graphify-out/cache/

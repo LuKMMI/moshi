@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prospects Haute-Marne</title>
+<style>
+:root{--bg:#f6f6f3;--card:#fff;--fg:#1d1d1b;--mute:#6b6b66;--line:#e4e4de;--acc:#1f6f5c;--warn:#b07400;--no:#b3261e}
+@media (prefers-color-scheme:dark){:root{--bg:#141413;--card:#1e1e1c;--fg:#ececea;--mute:#9a9a94;--line:#2e2e2b;--acc:#4fbf9f;--warn:#e0a640;--no:#f08a80}}
+*{box-sizing:border-box}body{margin:0;font:15px/1.5 system-ui,sans-serif;background:var(--bg);color:var(--fg)}
+header{padding:20px 16px 8px;max-width:1200px;margin:auto}h1{margin:0;font-size:1.5rem}.sub{color:var(--mute);margin:4px 0 0}
+.bar{display:flex;flex-wrap:wrap;gap:8px;max-width:1200px;margin:12px auto;padding:0 16px}
+.bar input,.bar select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg);font:inherit;min-width:0;flex:1 1 160px}
+.stats{display:flex;flex-wrap:wrap;gap:8px;max-width:1200px;margin:0 auto;padding:0 16px}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 12px;cursor:pointer;font:inherit;color:var(--fg)}
+.chip[aria-pressed=true]{background:var(--acc);color:#fff;border-color:var(--acc)}
+main{max-width:1200px;margin:12px auto 40px;padding:0 16px}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:10px}
+summary{padding:12px 16px;cursor:pointer;font-weight:600;display:flex;justify-content:space-between;gap:8px}
+.row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:12px;align-items:center;padding:10px 16px;border-top:1px solid var(--line)}
+.name{font-weight:600}.mute{color:var(--mute);font-size:.85rem}.stars{color:var(--warn);font-weight:600}
+.no{color:var(--no)}.yes{color:var(--acc)}
+button.go{background:var(--acc);color:#fff;border:0;border-radius:8px;padding:8px 12px;font:inherit;cursor:pointer;white-space:nowrap}
+button.go:disabled{opacity:.6;cursor:wait}a{color:var(--acc)}
+@media (max-width:720px){.row{grid-template-columns:1fr 1fr}.row>:first-child{grid-column:1/-1}}
+</style>
+</head>
+<body>
+<header><h1>Prospects Haute-Marne</h1><p class="sub" id="meta">Chargement…</p></header>
+<div class="bar">
+  <input id="q" type="search" placeholder="Rechercher un nom, une ville…" aria-label="Recherche">
+  <select id="city" aria-label="Ville"><option value="">Toutes les villes</option></select>
+  <select id="web" aria-label="Site web">
+    <option value="sans">Sans site connu (non + inconnu)</option><option value="non">Sans site confirmé par Google</option>
+    <option value="">Tous</option><option value="oui">Avec site</option>
+  </select>
+  <select id="rating" aria-label="Note Google minimale">
+    <option value="0">Toutes notes</option><option value="4">★ 4 et plus</option><option value="4.5">★ 4,5 et plus</option>
+  </select>
+</div>
+<div class="stats" id="branches"></div>
+<main id="list"></main>
+<script>
+let all = [], branch = '';
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+
+function filtered() {
+  const q = $('q').value.toLowerCase(), city = $('city').value, web = $('web').value, min = +$('rating').value;
+  return all.filter(p => (!branch || p.branch === branch) && (!city || p.city === city)
+    && (!web || (web === 'sans' ? p.website !== 'oui' : p.website === web))
+    && (!min || (p.google?.rating ?? 0) >= min)
+    && (!q || `${p.name} ${p.legalName} ${p.city}`.toLowerCase().includes(q)));
+}
+
+function row(p) {
+  const g = p.google;
+  const rating = g?.rating ? `<span class="stars">★ ${g.rating}</span> <span class="mute">(${g.reviews} avis)</span>`
+    : `<span class="mute">${g ? 'pas de fiche Google' : 'non vérifié'}</span>`;
+  const web = { oui: `<span class="yes">a un site</span>`, non: `<span class="no">aucun site</span>`, inconnu: `<span class="mute">site inconnu</span>` }[p.website];
+  const site = p.siteGenerated ? `<a href="/sites/${p.id}/" target="_blank">Voir le site</a> ` : '';
+  return `<div class="row"><div><div class="name">${esc(p.name)}</div><div class="mute">${esc(p.address)}</div></div>
+    <div>${rating}${g?.mapsUrl ? ` · <a href="${esc(g.mapsUrl)}" target="_blank" rel="noopener">Maps</a>` : ''}</div>
+    <div>${web}${g?.phone ? `<div class="mute">${esc(g.phone)}</div>` : ''}</div>
+    <div class="mute">NAF ${esc(p.naf)}<br>depuis ${esc((p.created || '').slice(0, 4))}</div>
+    <div>${site}<button class="go" data-id="${p.id}">${p.siteGenerated ? 'Régénérer' : 'Créer le site'}</button></div></div>`;
+}
+
+function render() {
+  const list = filtered(), groups = {};
+  for (const p of list) (groups[p.branch] ??= []).push(p);
+  $('list').innerHTML = Object.entries(groups).sort((a, b) => b[1].length - a[1].length).map(([b, ps]) =>
+    `<details ${branch || Object.keys(groups).length < 3 ? 'open' : ''}><summary><span>${esc(b)}</span><span class="mute">${ps.length}</span></summary>
+     ${ps.sort((x, y) => y.score - x.score).slice(0, 300).map(row).join('')}
+     ${ps.length > 300 ? `<div class="row mute">… ${ps.length - 300} de plus : affinez la recherche</div>` : ''}</details>`).join('')
+    || '<p class="mute">Aucun prospect pour ces filtres.</p>';
+}
+
+$('list').addEventListener('click', async e => {
+  const b = e.target.closest('button.go'); if (!b) return;
+  b.disabled = true; b.textContent = 'Génération…';
+  try {
+    const r = await fetch(`/api/sites/${b.dataset.id}`, { method: 'POST' }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    const p = all.find(x => x.id === b.dataset.id); p.siteGenerated = { engine: r.engine };
+    window.open(r.url, '_blank'); render();
+  } catch (err) { alert('Échec : ' + err.message); b.disabled = false; b.textContent = 'Créer le site'; }
+});
+$('branches').addEventListener('click', e => {
+  const c = e.target.closest('.chip'); if (!c) return;
+  branch = branch === c.dataset.b ? '' : c.dataset.b;
+  document.querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', x.dataset.b === branch)); render();
+});
+['q', 'city', 'web', 'rating'].forEach(id => $(id).addEventListener('input', render));
+
+fetch('/api/prospects').then(r => r.json()).then(d => {
+  all = d.prospects;
+  const counts = {}; all.forEach(p => counts[p.branch] = (counts[p.branch] || 0) + 1);
+  $('branches').innerHTML = Object.entries(counts).sort((a, b) => b[1] - a[1])
+    .map(([b, n]) => `<button class="chip" data-b="${esc(b)}" aria-pressed="false">${esc(b)} · ${n}</button>`).join('');
+  $('city').innerHTML += [...new Set(all.map(p => p.city))].sort().map(c => `<option>${esc(c)}</option>`).join('');
+  const checked = all.filter(p => p.google).length;
+  $('meta').textContent = `${all.length} établissements · ${checked} vérifiés sur Google · mis à jour le ${new Date(d.updatedAt).toLocaleDateString('fr-FR')}`;
+  render();
+}).catch(() => $('meta').textContent = 'Aucune donnée : lancez « npm run collect ».');
+</script>
+</body>
+</html>

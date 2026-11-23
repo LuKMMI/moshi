@@ -1,0 +1,12 @@
+{
+  "0": "package.json",
+  "1": "server.mjs",
+  "2": "sitegen.mjs",
+  "3": "Ponytail",
+  "4": "collect.test.mjs",
+  "5": "collect.mjs",
+  "6": "main",
+  "7": "fromRegistry",
+  "8": "CLAUDE.md",
+  "9": ".claude/CLAUDE.md"
+}

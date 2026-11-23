@@ -1,0 +1,13 @@
+{
+  "name": "moshi-prospects",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "collect": "node --env-file-if-exists=.env collect.mjs",
+    "start": "node --env-file-if-exists=.env server.mjs",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.12.0"
+  }
+}
