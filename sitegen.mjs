@@ -52,3 +52,35 @@ N'invente aucun fait vérifiable (prix, horaires, avis clients, diplômes) : met
   const html = text.slice(text.search(/<!doctype|<html/i)).replace(/```\s*$/, '');
   return html.includes('</html>') ? { html, engine: 'Claude' } : { html: templateSite(p), engine: 'modèle (réponse incomplète)' };
 }
+
+// E-mail, SMS et script d'appel de démarchage pour un prospect.
+export function templateMessages(p, siteUrl) {
+  const name = title(p.name), lien = siteUrl ? `\n\nJe vous ai préparé une maquette, visible ici : ${siteUrl}` : '';
+  const avis = p.google?.rating ? `Vos ${p.google.reviews} avis Google (${p.google.rating}/5) montrent que vos clients vous apprécient, ` : '';
+  return {
+    objet: `Un site internet pour ${name} ?`,
+    email: `Bonjour,\n\nJe suis créateur de sites internet en Haute-Marne. ${avis}mais je n'ai pas trouvé de site pour ${name}. Aujourd'hui, la plupart des clients cherchent en ligne avant de se déplacer.${lien}\n\nSeriez-vous disponible pour en parler 10 minutes cette semaine ?\n\nBien cordialement`,
+    sms: `Bonjour, je crée des sites pour les commerces de Haute-Marne. J'ai préparé une maquette pour ${name}${siteUrl ? ` : ${siteUrl}` : ''}. Je peux vous rappeler ?`,
+    appel: `1. Présentation : « Bonjour, [prénom], créateur de sites internet à côté de chez vous. »\n2. Constat : « En cherchant ${name} sur internet, je n'ai pas trouvé de site. »\n3. Valeur : « Un site vous fait trouver sur Google et rassure les nouveaux clients. »\n4. Preuve : « J'ai déjà préparé une maquette pour vous, je peux vous la montrer. »\n5. Rendez-vous : « Je passe 10 minutes cette semaine, plutôt mardi ou jeudi ? »\nObjection « trop cher » : « Le premier client apporté par le site le rembourse souvent. »`,
+  };
+}
+
+export async function generateMessages(p, siteUrl) {
+  if (!client) return templateMessages(p, siteUrl);
+  const schema = { type: 'object', additionalProperties: false, required: ['objet', 'email', 'sms', 'appel'],
+    properties: { objet: { type: 'string' }, email: { type: 'string' }, sms: { type: 'string' }, appel: { type: 'string' } } };
+  const msg = await client.beta.messages.create({
+    model: 'claude-opus-5-5', max_tokens: 16000,
+    betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default',
+    output_config: { format: { type: 'json_schema', schema } },
+    messages: [{ role: 'user', content: `Je crée des sites internet pour les commerces de Haute-Marne. Rédige en français, ton chaleureux et direct, sans jargon :
+- objet : objet d'e-mail court ;
+- email : e-mail de premier contact (120 mots max), signé "Bien cordialement" sans nom ;
+- sms : SMS de 160 caractères max ;
+- appel : script d'appel en 5 étapes + réponses aux 2 objections les plus probables pour ce métier.
+N'invente aucun fait. ${siteUrl ? `Mentionne la maquette déjà prête : ${siteUrl}` : 'Propose de préparer une maquette gratuite.'}
+Commerce : ${JSON.stringify({ nom: p.name, metier: p.branch, ville: p.city, note_google: p.google?.rating, nombre_avis: p.google?.reviews })}` }],
+  });
+  const text = msg.content.find(b => b.type === 'text')?.text;
+  return msg.stop_reason === 'end_turn' && text ? JSON.parse(text) : templateMessages(p, siteUrl);
+}

@@ -37,6 +37,18 @@ Le bouton **Créer le site** écrit `sites/<siret>/index.html` :
 
 Les informations inconnues (horaires, prix, etc.) sont marquées `[À compléter]` : rien n'est inventé.
 
+## Suivi et démarchage
+
+Cliquez sur un nom ou sur **Fiche** :
+- **Suivi** : statut (à contacter → contacté → intéressé → devis envoyé → signé / refusé), date de relance, notes. Les prospects à relancer apparaissent en haut (⏰). Enregistré dans `data/suivi.json`.
+- **Site** : créer la maquette, puis **Publier en ligne** sur Netlify (gratuit) pour envoyer un lien au commerçant. L'adresse reste la même si vous republiez.
+- **Rédiger e-mail, SMS et script d'appel** : textes personnalisés (Claude, ou modèle si pas de clé), boutons Copier / ouvrir la messagerie.
+- **Faire un devis** : page modifiable, mémorise vos coordonnées et tarifs, « Enregistrer en PDF » via l'impression du navigateur.
+
+**Jeton Netlify** (pour publier) : créez un compte gratuit sur netlify.com → *User settings → Applications → Personal access tokens → New access token*, puis collez-le quand `lancer.bat` le demande (ou dans `.env` : `NETLIFY_TOKEN=...`).
+
+Vos données (`data/prospects.json`, `data/suivi.json`, `sites/`, `.env`) restent sur votre ordinateur et ne sont jamais envoyées sur GitHub ; `data/seed.json` est la liste de départ.
+
 ## Outils d'agent installés
 
 - `.claude/skills/ponytail` : [Ponytail](https://github.com/DietrichGebert/ponytail) (MIT), règles du « développeur senior paresseux ».

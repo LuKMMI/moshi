@@ -3,3 +3,5 @@ node_modules/
 sites/*
 !sites/.gitkeep
 graphify-out/cache/
+data/prospects.json
+data/suivi.json

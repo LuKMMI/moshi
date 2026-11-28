@@ -6,15 +6,15 @@
     "semantic_hash": ""
   },
   "collect.mjs": {
-    "mtime": 1795862697.852862,
-    "seen": 1795862714.3237324,
-    "ast_hash": "8ba5b1c77cf73960b2b4e9ca3e8c5bf8",
+    "mtime": 1795864761.7752664,
+    "seen": 1795864907.530054,
+    "ast_hash": "b80074f161bd0543d5ca12b3006dc6c7",
     "semantic_hash": ""
   },
   "collect.test.mjs": {
-    "mtime": 1795446947.2296364,
-    "seen": 1795446965.0672457,
-    "ast_hash": "b2861813c73c0d2f2c26d5d6630ac6e5",
+    "mtime": 1795864853.6619923,
+    "seen": 1795864907.5300577,
+    "ast_hash": "06465fc7fde966101f412c52fdb45b0c",
     "semantic_hash": ""
   },
   "package.json": {
@@ -24,15 +24,15 @@
     "semantic_hash": ""
   },
   "server.mjs": {
-    "mtime": 1795863781.4064548,
-    "seen": 1795863790.0489693,
-    "ast_hash": "5bb4cb6e3554af9e876e1909afed0e08",
+    "mtime": 1795864761.7757168,
+    "seen": 1795864907.530067,
+    "ast_hash": "cfcfeb18f7f7e6fabae68b102f4e9d78",
     "semantic_hash": ""
   },
   "sitegen.mjs": {
-    "mtime": 1795446278.3296125,
-    "seen": 1795446356.159865,
-    "ast_hash": "8326977a3e5b044a48d2780266d08cb7",
+    "mtime": 1795864738.7379856,
+    "seen": 1795864907.5300686,
+    "ast_hash": "316f0238f945c57ae765ce413ab28b4b",
     "semantic_hash": ""
   },
   ".claude/CLAUDE.md": {
@@ -54,21 +54,33 @@
     "semantic_hash": ""
   },
   "public/index.html": {
-    "mtime": 1795863781.4070923,
-    "seen": 1795863790.0489779,
-    "ast_hash": "17c0c4b5cd42f364142e80c117bf4d84",
-    "semantic_hash": ""
-  },
-  "data/prospects.json": {
-    "mtime": 1795446964.5816371,
-    "seen": 1795446965.0672474,
-    "ast_hash": "eda17111fd9061f9935f8bbd7519afa3",
+    "mtime": 1795864821.7459905,
+    "seen": 1795864907.530118,
+    "ast_hash": "097586fbefd3c4a5f86c5c06a49e9a99",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1795862711.9451103,
-    "seen": 1795862714.323756,
-    "ast_hash": "1d7957bbffeddcfa3a2562f8f4d85144",
+    "mtime": 1795864906.6439712,
+    "seen": 1795864907.530113,
+    "ast_hash": "614e217cb97c6332ea43cdc55839420f",
+    "semantic_hash": ""
+  },
+  "data/seed.json": {
+    "mtime": 1795446964.5816371,
+    "seen": 1795864907.5300605,
+    "ast_hash": "eda17111fd9061f9935f8bbd7519afa3",
+    "semantic_hash": ""
+  },
+  "publish.mjs": {
+    "mtime": 1795864738.7419856,
+    "seen": 1795864907.530065,
+    "ast_hash": "947caf23e500065ffaef41efacb9f8c7",
+    "semantic_hash": ""
+  },
+  "public/devis.html": {
+    "mtime": 1795864895.173466,
+    "seen": 1795864907.5301156,
+    "ast_hash": "297436621304bcec4c5d33943be251e3",
     "semantic_hash": ""
   },
   "package-lock.json": {

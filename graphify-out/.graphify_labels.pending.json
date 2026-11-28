@@ -1,12 +1,11 @@
 {
   "0": "package.json",
   "1": "server.mjs",
-  "2": "sitegen.mjs",
+  "2": "collect.test.mjs",
   "3": "Ponytail",
-  "4": "collect.test.mjs",
+  "4": "handle",
   "5": "collect.mjs",
-  "6": "main",
-  "7": "fromRegistry",
+  "6": "publish.mjs",
   "8": "CLAUDE.md",
   "9": ".claude/CLAUDE.md",
   "10": "Prospects Haute-Marne"

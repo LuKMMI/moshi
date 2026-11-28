@@ -7,26 +7,45 @@
 :root{--bg:#f6f6f3;--card:#fff;--fg:#1d1d1b;--mute:#6b6b66;--line:#e4e4de;--acc:#1f6f5c;--warn:#b07400;--no:#b3261e}
 @media (prefers-color-scheme:dark){:root{--bg:#141413;--card:#1e1e1c;--fg:#ececea;--mute:#9a9a94;--line:#2e2e2b;--acc:#4fbf9f;--warn:#e0a640;--no:#f08a80}}
 *{box-sizing:border-box}body{margin:0;font:15px/1.5 system-ui,sans-serif;background:var(--bg);color:var(--fg)}
-header{padding:20px 16px 8px;max-width:1200px;margin:auto}h1{margin:0;font-size:1.5rem}.sub{color:var(--mute);margin:4px 0 0}
-.bar{display:flex;flex-wrap:wrap;gap:8px;max-width:1200px;margin:12px auto;padding:0 16px}
-.bar input,.bar select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg);font:inherit;min-width:0;flex:1 1 160px}
-.stats{display:flex;flex-wrap:wrap;gap:8px;max-width:1200px;margin:0 auto;padding:0 16px}
+.wrap{max-width:1200px;margin:auto;padding:0 16px}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:12px;padding-top:20px}
+h1{margin:0;font-size:1.5rem}.sub{color:var(--mute);margin:4px 0 0}
+.bar{display:flex;flex-wrap:wrap;gap:8px;margin:12px auto}
+.bar input,.bar select,dialog select,dialog input,dialog textarea{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg);font:inherit;min-width:0}
+.bar>*{flex:1 1 150px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px auto}
 .chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 12px;cursor:pointer;font:inherit;color:var(--fg)}
 .chip[aria-pressed=true]{background:var(--acc);color:#fff;border-color:var(--acc)}
-main{max-width:1200px;margin:12px auto 40px;padding:0 16px}
+.chip.hot{border-color:var(--warn);color:var(--warn)}
+main{margin:12px auto 40px}
 details{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:10px}
 summary{padding:12px 16px;cursor:pointer;font-weight:600;display:flex;justify-content:space-between;gap:8px}
-.row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:12px;align-items:center;padding:10px 16px;border-top:1px solid var(--line)}
-.name{font-weight:600}.mute{color:var(--mute);font-size:.85rem}.stars{color:var(--warn);font-weight:600}
+.row{display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr auto;gap:12px;align-items:center;padding:10px 16px;border-top:1px solid var(--line)}
+.name{font-weight:600;cursor:pointer}.name:hover{text-decoration:underline}.mute{color:var(--mute);font-size:.85rem}.stars{color:var(--warn);font-weight:600}
 .no{color:var(--no)}.yes{color:var(--acc)}
-button.go{background:var(--acc);color:#fff;border:0;border-radius:8px;padding:8px 12px;font:inherit;cursor:pointer;white-space:nowrap}
-button.go:disabled{opacity:.6;cursor:wait}a{color:var(--acc)}
-@media (max-width:720px){.row{grid-template-columns:1fr 1fr}.row>:first-child{grid-column:1/-1}}
+.badge{display:inline-block;border-radius:999px;padding:1px 10px;font-size:.8rem;background:var(--line)}
+.badge.contacte{background:#dbe8ff;color:#1a3d7c}.badge.interesse{background:#fff1c2;color:#6b4e00}.badge.devis{background:#f0dcff;color:#5a1f80}
+.badge.signe{background:#d4f5e4;color:#11603b}.badge.refuse{background:#f7d9d7;color:#7d1d17}
+button.go,button.alt{border:0;border-radius:8px;padding:8px 12px;font:inherit;cursor:pointer;white-space:nowrap}
+button.go{background:var(--acc);color:#fff}button.alt{background:var(--line);color:var(--fg)}
+button:disabled{opacity:.6;cursor:wait}a{color:var(--acc)}
+dialog{border:0;border-radius:14px;padding:0;width:min(760px,100%);max-height:92vh;background:var(--card);color:var(--fg)}
+dialog::backdrop{background:#0008}
+.dh{position:sticky;top:0;background:var(--card);padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px}
+.dh h2{margin:0;font-size:1.25rem}.db{padding:16px 20px;display:grid;gap:16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid2 label,.db label{display:grid;gap:4px;font-size:.85rem;color:var(--mute)}
+textarea{width:100%;resize:vertical}.actions{display:flex;flex-wrap:wrap;gap:8px}
+h3{margin:0 0 4px;font-size:1rem}
+@media (max-width:720px){.row{grid-template-columns:1fr 1fr}.row>:first-child{grid-column:1/-1}.grid2{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<header><h1>Prospects Haute-Marne</h1><p class="sub" id="meta">Chargement…</p>
-<button class="go" id="collect" style="margin-top:8px">Mettre à jour et vérifier sur Google</button></header>
+<div class="wrap">
+<header>
+  <div><h1>Prospects Haute-Marne</h1><p class="sub" id="meta">Chargement…</p></div>
+  <button class="go" id="collect">Mettre à jour et vérifier sur Google</button>
+</header>
+<div class="chips" id="pipeline" aria-label="Suivi commercial"></div>
 <div class="bar">
   <input id="q" type="search" placeholder="Rechercher un nom, une ville…" aria-label="Recherche">
   <select id="city" aria-label="Ville"><option value="">Toutes les villes</option></select>
@@ -38,70 +57,150 @@ button.go:disabled{opacity:.6;cursor:wait}a{color:var(--acc)}
     <option value="0">Toutes notes</option><option value="4">★ 4 et plus</option><option value="4.5">★ 4,5 et plus</option>
   </select>
 </div>
-<div class="stats" id="branches"></div>
+<div class="chips" id="branches"></div>
 <main id="list"></main>
+</div>
+
+<dialog id="fiche"></dialog>
+
 <script>
-let all = [], branch = '';
+const STATUTS = { '': 'À contacter', contacte: 'Contacté', interesse: 'Intéressé', devis: 'Devis envoyé', signe: 'Signé', refuse: 'Refusé' };
+let all = [], suivi = {}, branch = '', statut = null;
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+const today = () => new Date().toISOString().slice(0, 10);
+const st = p => suivi[p.id] || {};
+const aRelancer = p => st(p).relance && st(p).relance <= today() && !['signe', 'refuse'].includes(st(p).statut);
+const api = (path, data) => fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data || {}) })
+  .then(async r => { const j = await r.json(); if (!r.ok) throw new Error(j.error); return j; });
 
 function filtered() {
   const q = $('q').value.toLowerCase(), city = $('city').value, web = $('web').value, min = +$('rating').value;
   return all.filter(p => (!branch || p.branch === branch) && (!city || p.city === city)
-    && (!web || (web === 'sans' ? p.website !== 'oui' : p.website === web))
+    && (statut === null || (statut === 'relance' ? aRelancer(p) : (st(p).statut || '') === statut))
+    && (statut !== null || !web || (web === 'sans' ? p.website !== 'oui' : p.website === web))
     && (!min || (p.google?.rating ?? 0) >= min)
-    && (!q || `${p.name} ${p.legalName} ${p.city}`.toLowerCase().includes(q)));
+    && (!q || `${p.name} ${p.legalName} ${p.city} ${st(p).note || ''}`.toLowerCase().includes(q)));
 }
 
+const mapsLink = p => p.google?.mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name + ' ' + p.city)}`;
+
 function row(p) {
-  const g = p.google;
+  const g = p.google, s = st(p);
   const rating = g?.rating ? `<span class="stars">★ ${g.rating}</span> <span class="mute">(${g.reviews} avis)</span>`
-    : `<span class="mute">${g ? 'pas de fiche Google' : 'non vérifié'}</span>`
-      + (g?.mapsUrl ? '' : ` · <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name + ' ' + p.city)}" target="_blank" rel="noopener">Maps</a>`);
+    : `<span class="mute">${g ? 'pas de fiche Google' : 'non vérifié'}</span>`;
   const web = { oui: `<span class="yes">a un site</span>`, non: `<span class="no">aucun site</span>`, inconnu: `<span class="mute">site inconnu</span>` }[p.website];
-  const site = p.siteGenerated ? `<a href="/sites/${p.id}/" target="_blank">Voir le site</a> ` : '';
-  return `<div class="row"><div><div class="name">${esc(p.name)}</div><div class="mute">${esc(p.address)}</div></div>
-    <div>${rating}${g?.mapsUrl ? ` · <a href="${esc(g.mapsUrl)}" target="_blank" rel="noopener">Maps</a>` : ''}</div>
+  return `<div class="row"><div><div class="name" data-open="${p.id}">${esc(p.name)}</div><div class="mute">${esc(p.address)}</div></div>
+    <div>${rating} · <a href="${esc(mapsLink(p))}" target="_blank" rel="noopener">Maps</a></div>
     <div>${web}${g?.phone ? `<div class="mute">${esc(g.phone)}</div>` : ''}</div>
-    <div class="mute">NAF ${esc(p.naf)}<br>depuis ${esc((p.created || '').slice(0, 4))}</div>
-    <div>${site}<button class="go" data-id="${p.id}">${p.siteGenerated ? 'Régénérer' : 'Créer le site'}</button></div></div>`;
+    <div><span class="badge ${s.statut || ''}">${STATUTS[s.statut || '']}</span>${s.relance ? `<div class="mute ${aRelancer(p) ? 'no' : ''}">relance ${new Date(s.relance).toLocaleDateString('fr-FR')}</div>` : ''}</div>
+    <div class="actions">${p.siteGenerated ? `<a href="/sites/${p.id}/" target="_blank">Voir le site</a>` : `<button class="go" data-site="${p.id}">Créer le site</button>`}
+      <button class="alt" data-open="${p.id}">Fiche</button></div></div>`;
+}
+
+function renderPipeline() {
+  const n = k => all.filter(p => (st(p).statut || '') === k).length;
+  const suivis = Object.keys(STATUTS).filter(Boolean).map(k => [k, `${STATUTS[k]} · ${n(k)}`]);
+  const rel = all.filter(aRelancer).length;
+  $('pipeline').innerHTML = [[null, 'Tous les prospects'], ...suivis, ...(rel ? [['relance', `⏰ À relancer · ${rel}`]] : [])]
+    .map(([k, l]) => `<button class="chip ${k === 'relance' ? 'hot' : ''}" data-statut="${k ?? ''}" data-all="${k === null}" aria-pressed="${statut === k}">${l}</button>`).join('');
 }
 
 function render() {
+  renderPipeline();
   const list = filtered(), groups = {};
   for (const p of list) (groups[p.branch] ??= []).push(p);
+  const open = branch || statut !== null || Object.keys(groups).length < 3;
   $('list').innerHTML = Object.entries(groups).sort((a, b) => b[1].length - a[1].length).map(([b, ps]) =>
-    `<details ${branch || Object.keys(groups).length < 3 ? 'open' : ''}><summary><span>${esc(b)}</span><span class="mute">${ps.length}</span></summary>
+    `<details ${open ? 'open' : ''}><summary><span>${esc(b)}</span><span class="mute">${ps.length}</span></summary>
      ${ps.sort((x, y) => y.score - x.score).slice(0, 300).map(row).join('')}
      ${ps.length > 300 ? `<div class="row mute">… ${ps.length - 300} de plus : affinez la recherche</div>` : ''}</details>`).join('')
     || '<p class="mute">Aucun prospect pour ces filtres.</p>';
 }
 
-$('collect').addEventListener('click', async () => {
-  const b = $('collect'); b.disabled = true; b.textContent = 'Collecte en cours (quelques minutes)…';
-  const r = await fetch('/api/collect', { method: 'POST' }).then(r => r.json()).catch(e => ({ error: e.message }));
-  if (r.error) { alert('Échec : ' + r.error); b.disabled = false; b.textContent = 'Mettre à jour et vérifier sur Google'; }
-  else location.reload();
-});
-$('list').addEventListener('click', async e => {
-  const b = e.target.closest('button.go'); if (!b) return;
-  b.disabled = true; b.textContent = 'Génération…';
+async function createSite(id, btn) {
+  btn.disabled = true; btn.textContent = 'Génération… (1 à 2 min)';
   try {
-    const r = await fetch(`/api/sites/${b.dataset.id}`, { method: 'POST' }).then(r => r.json());
-    if (r.error) throw new Error(r.error);
-    const p = all.find(x => x.id === b.dataset.id); p.siteGenerated = { engine: r.engine };
-    window.open(r.url, '_blank'); render();
-  } catch (err) { alert('Échec : ' + err.message); b.disabled = false; b.textContent = 'Créer le site'; }
+    const r = await api(`/api/sites/${id}`);
+    all.find(x => x.id === id).siteGenerated = { engine: r.engine };
+    window.open(r.url, '_blank');
+  } catch (e) { alert('Échec : ' + e.message); }
+  render(); if ($('fiche').open) openFiche(id);
+}
+
+function openFiche(id) {
+  const p = all.find(x => x.id === id), s = st(p), g = p.google, d = $('fiche');
+  d.innerHTML = `<div class="dh"><div><h2>${esc(p.name)}</h2><div class="mute">${esc(p.branch)} · ${esc(p.address)}</div></div>
+    <button class="alt" data-close aria-label="Fermer">✕</button></div>
+  <div class="db">
+    <div class="mute">${g?.rating ? `<span class="stars">★ ${g.rating}</span> (${g.reviews} avis) · ` : ''}${g?.phone ? `<a href="tel:${esc(g.phone.replace(/\s/g, ''))}">${esc(g.phone)}</a> · ` : ''}<a href="${esc(mapsLink(p))}" target="_blank" rel="noopener">Google Maps</a> · NAF ${esc(p.naf)} · SIRET ${p.id} · ${esc(p.legalName)}</div>
+    <section><h3>Suivi</h3><div class="grid2">
+      <label>Statut<select data-f="statut">${Object.entries(STATUTS).map(([k, l]) => `<option value="${k}" ${k === (s.statut || '') ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+      <label>Relancer le<input type="date" data-f="relance" value="${esc(s.relance || '')}"></label></div>
+      <label style="margin-top:8px">Notes (appels, rendez-vous, besoins…)<textarea data-f="note" rows="3">${esc(s.note || '')}</textarea></label></section>
+    <section><h3>Site</h3><div class="actions">
+      <button class="go" data-site="${p.id}">${p.siteGenerated ? 'Régénérer le site' : 'Créer le site'}</button>
+      ${p.siteGenerated ? `<a href="/sites/${p.id}/" target="_blank">Voir la maquette</a>
+      <button class="alt" data-publish>${s.url ? 'Republier' : 'Publier en ligne'}</button>` : ''}
+      ${s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.url)}</a>` : ''}</div></section>
+    <section><h3>Démarchage</h3><div class="actions">
+      <button class="alt" data-msg>Rédiger e-mail, SMS et script d'appel</button>
+      <button class="alt" data-devis>Faire un devis</button></div><div id="msgs"></div></section>
+  </div>`;
+  if (!d.open) d.showModal();
+  d.dataset.id = id;
+}
+
+$('fiche').addEventListener('change', async e => {
+  const f = e.target.dataset.f; if (!f) return;
+  const id = $('fiche').dataset.id;
+  try { suivi[id] = await api(`/api/suivi/${id}`, { [f]: e.target.value }); render(); }
+  catch (err) { alert('Échec : ' + err.message); }
 });
-$('branches').addEventListener('click', e => {
-  const c = e.target.closest('.chip'); if (!c) return;
-  branch = branch === c.dataset.b ? '' : c.dataset.b;
-  document.querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', x.dataset.b === branch)); render();
+
+$('fiche').addEventListener('click', async e => {
+  const d = $('fiche'), id = d.dataset.id, t = e.target;
+  if (t === d || t.closest('[data-close]')) return d.close();
+  if (t.closest('[data-devis]')) return window.open(`/devis.html?id=${id}`, '_blank');
+  if (t.closest('[data-copy]')) { navigator.clipboard.writeText($(t.dataset.copy).value); t.textContent = 'Copié ✓'; return; }
+  if (t.closest('[data-publish]')) {
+    t.disabled = true; t.textContent = 'Publication…';
+    try { const r = await api(`/api/publish/${id}`); (suivi[id] ??= {}).url = r.url; window.open(r.url, '_blank'); }
+    catch (err) { alert('Échec : ' + err.message); }
+    return openFiche(id);
+  }
+  if (t.closest('[data-msg]')) {
+    t.disabled = true; t.textContent = 'Rédaction…';
+    try {
+      const m = await api(`/api/message/${id}`), p = all.find(x => x.id === id);
+      const box = (k, label, rows) => `<label>${label}<textarea id="m-${k}" rows="${rows}">${esc(m[k])}</textarea></label><button class="alt" data-copy="m-${k}">Copier</button>`;
+      $('msgs').innerHTML = `<div class="db" style="padding:12px 0 0">${box('objet', 'Objet', 1)}${box('email', 'E-mail', 9)}
+        <a href="mailto:?subject=${encodeURIComponent(m.objet)}&body=${encodeURIComponent(m.email)}">Ouvrir dans ma messagerie</a>
+        ${box('sms', 'SMS', 3)}${p.google?.phone ? `<a href="sms:${esc(p.google.phone.replace(/\s/g, ''))}?body=${encodeURIComponent(m.sms)}">Envoyer le SMS depuis le téléphone</a>` : ''}
+        ${box('appel', 'Script d’appel', 10)}</div>`;
+    } catch (err) { alert('Échec : ' + err.message); }
+    t.disabled = false; t.textContent = 'Rédiger à nouveau';
+  }
+});
+
+document.addEventListener('click', e => {
+  const site = e.target.closest('button[data-site]'); if (site) return createSite(site.dataset.site, site);
+  const open = e.target.closest('[data-open]'); if (open) return openFiche(open.dataset.open);
+  const c = e.target.closest('.chip[data-b]');
+  if (c) { branch = branch === c.dataset.b ? '' : c.dataset.b; document.querySelectorAll('.chip[data-b]').forEach(x => x.setAttribute('aria-pressed', x.dataset.b === branch)); return render(); }
+  const s = e.target.closest('.chip[data-statut]');
+  if (s) { statut = s.dataset.all === 'true' ? null : s.dataset.statut; render(); }
 });
 ['q', 'city', 'web', 'rating'].forEach(id => $(id).addEventListener('input', render));
 
+$('collect').addEventListener('click', async () => {
+  const b = $('collect'); b.disabled = true; b.textContent = 'Collecte en cours (quelques minutes)…';
+  try { await api('/api/collect'); location.reload(); }
+  catch (e) { alert('Échec : ' + e.message); b.disabled = false; b.textContent = 'Mettre à jour et vérifier sur Google'; }
+});
+
 fetch('/api/prospects').then(r => r.json()).then(d => {
-  all = d.prospects;
+  all = d.prospects; suivi = d.suivi || {};
   const counts = {}; all.forEach(p => counts[p.branch] = (counts[p.branch] || 0) + 1);
   $('branches').innerHTML = Object.entries(counts).sort((a, b) => b[1] - a[1])
     .map(([b, n]) => `<button class="chip" data-b="${esc(b)}" aria-pressed="false">${esc(b)} · ${n}</button>`).join('');
@@ -109,7 +208,7 @@ fetch('/api/prospects').then(r => r.json()).then(d => {
   const checked = all.filter(p => p.google).length;
   $('meta').textContent = `${all.length} établissements · ${checked} vérifiés sur Google · mis à jour le ${new Date(d.updatedAt).toLocaleDateString('fr-FR')}`;
   render();
-}).catch(() => $('meta').textContent = 'Aucune donnée : lancez « npm run collect ».');
+}).catch(() => $('meta').textContent = 'Aucune donnée : cliquez sur « Mettre à jour ».');
 </script>
 </body>
 </html>

@@ -26,3 +26,17 @@ test('exclusions : associations et holdings', async () => {
   assert.ok(EXCLUDED.test('94.99Z') && EXCLUDED.test('70.10Z'));
   assert.ok(!EXCLUDED.test('56.10A'));
 });
+
+test('suivi : valide statut, date et note', async () => {
+  const { cleanSuivi } = await import('./server.mjs');
+  assert.deepEqual(cleanSuivi({ statut: 'signe', relance: '2026-12-01', note: 'ok' }), { statut: 'signe', relance: '2026-12-01', note: 'ok' });
+  assert.throws(() => cleanSuivi({ statut: 'pirate' }));
+  assert.throws(() => cleanSuivi({ relance: '../x' }));
+  assert.equal(cleanSuivi({ note: 'x'.repeat(9000) }).note.length, 5000);
+});
+
+test('messages modèle : mentionne le lien de la maquette', async () => {
+  const { templateMessages } = await import('./sitegen.mjs');
+  const m = templateMessages({ name: 'CHEZ PAUL', city: 'LANGRES' }, 'https://x.netlify.app');
+  assert.ok(m.email.includes('https://x.netlify.app') && m.sms.length <= 200);
+});

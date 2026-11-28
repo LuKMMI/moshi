@@ -1,6 +1,7 @@
 // Collecte des prospects de Haute-Marne (52) sans site web.
 // Sources : annuaire officiel des entreprises (gratuit), OpenStreetMap (gratuit), Google Places (clé, payant).
 import { readFile, writeFile } from 'node:fs/promises';
+import { pathToFileURL } from 'node:url';
 
 const DEPT = '52';
 const OUT = new URL('./data/prospects.json', import.meta.url);
@@ -119,7 +120,7 @@ async function google(p) {
 }
 
 async function main() {
-  const old = new Map((await readFile(OUT, 'utf8').then(JSON.parse).catch(() => ({ prospects: [] }))).prospects.map(p => [p.id, p]));
+  const old = new Map((await readFile(OUT, 'utf8').catch(() => readFile(new URL('./data/seed.json', import.meta.url), 'utf8')).then(JSON.parse)).prospects.map(p => [p.id, p]));
   const found = await fromRegistry();
   const osm = await osmWebsites();
   let calls = 0;
@@ -144,4 +145,4 @@ async function main() {
   console.log(`\n${prospects.length} prospects écrits dans data/prospects.json (${calls} appels Google)`);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) await main();
+if (import.meta.url === pathToFileURL(process.argv[1]).href) await main();
