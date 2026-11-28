@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Prospects Haute-Marne</title>
+<link rel="stylesheet" href="/leaflet/leaflet.css">
+<script src="/leaflet/leaflet.js"></script>
 <style>
 :root{--bg:#f6f6f3;--card:#fff;--fg:#1d1d1b;--mute:#6b6b66;--line:#e4e4de;--acc:#1f6f5c;--warn:#b07400;--no:#b3261e}
 @media (prefers-color-scheme:dark){:root{--bg:#141413;--card:#1e1e1c;--fg:#ececea;--mute:#9a9a94;--line:#2e2e2b;--acc:#4fbf9f;--warn:#e0a640;--no:#f08a80}}
@@ -35,7 +37,9 @@ dialog::backdrop{background:#0008}
 .dh h2{margin:0;font-size:1.25rem}.db{padding:16px 20px;display:grid;gap:16px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid2 label,.db label{display:grid;gap:4px;font-size:.85rem;color:var(--mute)}
 textarea{width:100%;resize:vertical}.actions{display:flex;flex-wrap:wrap;gap:8px}
-h3{margin:0 0 4px;font-size:1rem}
+h3{margin:0 0 4px;font-size:1rem}.warn{color:var(--warn);font-weight:600}
+#map{height:70vh;border-radius:0 0 14px 14px}dialog.wide{width:min(1100px,100%)}
+table.stats{width:100%;border-collapse:collapse}table.stats td,table.stats th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right}table.stats td:first-child,table.stats th:first-child{text-align:left}
 @media (max-width:720px){.row{grid-template-columns:1fr 1fr}.row>:first-child{grid-column:1/-1}.grid2{grid-template-columns:1fr}}
 </style>
 </head>
@@ -43,7 +47,9 @@ h3{margin:0 0 4px;font-size:1rem}
 <div class="wrap">
 <header>
   <div><h1>Prospects Haute-Marne</h1><p class="sub" id="meta">Chargement…</p></div>
-  <button class="go" id="collect">Mettre à jour et vérifier sur Google</button>
+  <div class="actions"><button class="alt" id="carte">🗺 Carte</button><button class="alt" id="statsBtn">📊 Statistiques</button>
+    <a href="/api/export.csv" download><button class="alt" tabindex="-1">⬇ Exporter (Excel)</button></a>
+    <button class="go" id="collect">Mettre à jour et vérifier sur Google</button></div>
 </header>
 <div class="chips" id="pipeline" aria-label="Suivi commercial"></div>
 <div class="bar">
@@ -51,7 +57,7 @@ h3{margin:0 0 4px;font-size:1rem}
   <select id="city" aria-label="Ville"><option value="">Toutes les villes</option></select>
   <select id="web" aria-label="Site web">
     <option value="sans">Sans site connu (non + inconnu)</option><option value="non">Sans site confirmé par Google</option>
-    <option value="">Tous</option><option value="oui">Avec site</option>
+    <option value="facebook">Facebook seulement 🔥</option><option value="">Tous</option><option value="oui">Avec site (à moderniser ?)</option>
   </select>
   <select id="rating" aria-label="Note Google minimale">
     <option value="0">Toutes notes</option><option value="4">★ 4 et plus</option><option value="4.5">★ 4,5 et plus</option>
@@ -62,6 +68,8 @@ h3{margin:0 0 4px;font-size:1rem}
 </div>
 
 <dialog id="fiche"></dialog>
+<dialog id="mapDlg" class="wide"><div class="dh"><h2>Carte des prospects affichés</h2><button class="alt" data-close aria-label="Fermer">✕</button></div><div id="map"></div></dialog>
+<dialog id="statsDlg" class="wide"><div class="dh"><h2>Statistiques</h2><button class="alt" data-close aria-label="Fermer">✕</button></div><div class="db" id="stats"></div></dialog>
 
 <script>
 const STATUTS = { '': 'À contacter', contacte: 'Contacté', interesse: 'Intéressé', devis: 'Devis envoyé', signe: 'Signé', refuse: 'Refusé' };
@@ -89,7 +97,7 @@ function row(p) {
   const g = p.google, s = st(p);
   const rating = g?.rating ? `<span class="stars">★ ${g.rating}</span> <span class="mute">(${g.reviews} avis)</span>`
     : `<span class="mute">${g ? 'pas de fiche Google' : 'non vérifié'}</span>`;
-  const web = { oui: `<span class="yes">a un site</span>`, non: `<span class="no">aucun site</span>`, inconnu: `<span class="mute">site inconnu</span>` }[p.website];
+  const web = { oui: `<span class="yes">a un site</span>${s.audit ? ` <span class="${s.audit.perf < 50 ? 'warn' : 'mute'}">(${s.audit.perf}/100)</span>` : ''}`, facebook: `<span class="warn">Facebook seulement 🔥</span>`, non: `<span class="no">aucun site</span>`, inconnu: `<span class="mute">site inconnu</span>` }[p.website];
   return `<div class="row"><div><div class="name" data-open="${p.id}">${esc(p.name)}</div><div class="mute">${esc(p.address)}</div></div>
     <div>${rating} · <a href="${esc(mapsLink(p))}" target="_blank" rel="noopener">Maps</a></div>
     <div>${web}${g?.phone ? `<div class="mute">${esc(g.phone)}</div>` : ''}</div>
@@ -128,6 +136,8 @@ async function createSite(id, btn) {
   render(); if ($('fiche').open) openFiche(id);
 }
 
+const auditText = a => `Mobile : <b class="${a.perf < 50 ? 'no' : 'yes'}">${a.perf}/100</b> · Référencement : <b class="${a.seo < 80 ? 'no' : 'yes'}">${a.seo}/100</b>${a.perf < 50 || a.seo < 80 ? ' → <b class="warn">site à refaire, bon prospect</b>' : ''}`;
+
 function openFiche(id) {
   const p = all.find(x => x.id === id), s = st(p), g = p.google, d = $('fiche');
   d.innerHTML = `<div class="dh"><div><h2>${esc(p.name)}</h2><div class="mute">${esc(p.branch)} · ${esc(p.address)}</div></div>
@@ -136,8 +146,11 @@ function openFiche(id) {
     <div class="mute">${g?.rating ? `<span class="stars">★ ${g.rating}</span> (${g.reviews} avis) · ` : ''}${g?.phone ? `<a href="tel:${esc(g.phone.replace(/\s/g, ''))}">${esc(g.phone)}</a> · ` : ''}<a href="${esc(mapsLink(p))}" target="_blank" rel="noopener">Google Maps</a> · NAF ${esc(p.naf)} · SIRET ${p.id} · ${esc(p.legalName)}</div>
     <section><h3>Suivi</h3><div class="grid2">
       <label>Statut<select data-f="statut">${Object.entries(STATUTS).map(([k, l]) => `<option value="${k}" ${k === (s.statut || '') ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
-      <label>Relancer le<input type="date" data-f="relance" value="${esc(s.relance || '')}"></label></div>
+      <label>Relancer le<input type="date" data-f="relance" value="${esc(s.relance || '')}"></label>
+      <label>Montant signé (€)<input type="number" min="0" step="1" data-f="montant" value="${esc(s.montant ?? '')}"></label></div>
       <label style="margin-top:8px">Notes (appels, rendez-vous, besoins…)<textarea data-f="note" rows="3">${esc(s.note || '')}</textarea></label></section>
+    ${p.website === 'oui' && /^http/.test(p.websiteUrl || '') ? `<section><h3>Site actuel</h3><div class="actions"><a href="${esc(p.websiteUrl)}" target="_blank" rel="noopener">${esc(p.websiteUrl)}</a>
+      <button class="alt" data-audit>Analyser le site actuel</button><span id="auditRes">${s.audit ? auditText(s.audit) : ''}</span></div></section>` : ''}
     <section><h3>Site</h3><div class="actions">
       <button class="go" data-site="${p.id}">${p.siteGenerated ? 'Régénérer le site' : 'Créer le site'}</button>
       ${p.siteGenerated ? `<a href="/sites/${p.id}/" target="_blank">Voir la maquette</a>
@@ -145,7 +158,8 @@ function openFiche(id) {
       ${s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.url)}</a>` : ''}</div></section>
     <section><h3>Démarchage</h3><div class="actions">
       <button class="alt" data-msg>Rédiger e-mail, SMS et script d'appel</button>
-      <button class="alt" data-devis>Faire un devis</button></div><div id="msgs"></div></section>
+      <button class="alt" data-devis>Faire un devis</button>
+      <button class="alt" data-domaine>Nom de domaine libre ?</button><span id="domRes"></span></div><div id="msgs"></div></section>
   </div>`;
   if (!d.open) d.showModal();
   d.dataset.id = id;
@@ -161,6 +175,18 @@ $('fiche').addEventListener('change', async e => {
 $('fiche').addEventListener('click', async e => {
   const d = $('fiche'), id = d.dataset.id, t = e.target;
   if (t === d || t.closest('[data-close]')) return d.close();
+  if (t.closest('[data-domaine]')) {
+    $('domRes').textContent = 'Vérification…';
+    const r = await fetch(`/api/domaine/${id}`).then(r => r.json());
+    $('domRes').innerHTML = Object.entries(r).map(([d, v]) => `${esc(d)} : <b class="${v === 'libre' ? 'yes' : 'no'}">${esc(v)}</b>`).join(' · ');
+    return;
+  }
+  if (t.closest('[data-audit]')) {
+    $('auditRes').textContent = 'Analyse (30 s)…';
+    try { const a = await api(`/api/audit/${id}`); (suivi[id] ??= {}).audit = a; $('auditRes').innerHTML = auditText(a); render(); }
+    catch (err) { $('auditRes').textContent = 'Échec : ' + err.message; }
+    return;
+  }
   if (t.closest('[data-devis]')) return window.open(`/devis.html?id=${id}`, '_blank');
   if (t.closest('[data-copy]')) { navigator.clipboard.writeText($(t.dataset.copy).value); t.textContent = 'Copié ✓'; return; }
   if (t.closest('[data-publish]')) {
@@ -193,8 +219,44 @@ document.addEventListener('click', e => {
 });
 ['q', 'city', 'web', 'rating'].forEach(id => $(id).addEventListener('input', render));
 
+const COULEURS = { '': '#888', contacte: '#3b6fd4', interesse: '#d49b00', devis: '#8a3fc0', signe: '#1f8a5c', refuse: '#c0392b' };
+let map, layer;
+$('carte').onclick = () => {
+  $('mapDlg').showModal();
+  if (!map) {
+    map = L.map('map', { preferCanvas: true }).setView([48.1, 5.14], 9);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+  }
+  layer?.remove(); layer = L.layerGroup().addTo(map);
+  const pts = filtered().filter(p => p.lat);
+  for (const p of pts) L.circleMarker([p.lat, p.lon], { radius: 6, color: COULEURS[st(p).statut || ''], fillOpacity: .8 })
+    .bindPopup(`<b>${esc(p.name)}</b><br>${esc(p.address)}<br><button class="go" data-open="${p.id}">Fiche</button>`).addTo(layer);
+  setTimeout(() => { map.invalidateSize(); if (pts.length) map.fitBounds(pts.map(p => [p.lat, p.lon]), { maxZoom: 15 }); }, 50);
+};
+
+$('statsBtn').onclick = () => {
+  const rows = {}, tot = { suivis: 0, contactes: 0, interesses: 0, signes: 0, refuses: 0, ca: 0 };
+  for (const p of all) {
+    const s = st(p); if (!s.statut) continue;
+    const r = rows[p.branch] ??= { suivis: 0, contactes: 0, interesses: 0, signes: 0, refuses: 0, ca: 0 };
+    for (const o of [r, tot]) {
+      o.contactes++; if (['interesse', 'devis', 'signe'].includes(s.statut)) o.interesses++;
+      if (s.statut === 'signe') { o.signes++; o.ca += s.montant || 0; } if (s.statut === 'refuse') o.refuses++;
+    }
+  }
+  const eur = n => n.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+  const pct = (a, b) => b ? Math.round(100 * a / b) + ' %' : '–';
+  const tr = (name, r, tag = 'td') => `<tr><${tag}>${esc(name)}</${tag}><${tag}>${r.contactes}</${tag}><${tag}>${r.interesses} (${pct(r.interesses, r.contactes)})</${tag}><${tag}>${r.signes} (${pct(r.signes, r.contactes)})</${tag}><${tag}>${r.refuses}</${tag}><${tag}>${eur(r.ca)}</${tag}></tr>`;
+  $('stats').innerHTML = tot.contactes ? `<table class="stats"><tr><th>Métier</th><th>Contactés</th><th>Intéressés</th><th>Signés</th><th>Refus</th><th>Chiffre d'affaires</th></tr>
+    ${Object.entries(rows).sort((a, b) => b[1].signes - a[1].signes || b[1].interesses - a[1].interesses).map(([b, r]) => tr(b, r)).join('')}${tr('Total', tot, 'th')}</table>
+    <p class="mute">Démarchez en priorité les métiers où le taux de signature est le plus haut.</p>`
+    : '<p class="mute">Changez le statut de vos premiers prospects (Contacté, Intéressé…) pour voir vos statistiques.</p>';
+  $('statsDlg').showModal();
+};
+for (const d of ['mapDlg', 'statsDlg']) $(d).addEventListener('click', e => { if (e.target === $(d) || e.target.closest('[data-close]')) $(d).close(); });
+
 $('collect').addEventListener('click', async () => {
-  const b = $('collect'); b.disabled = true; b.textContent = 'Collecte en cours (quelques minutes)…';
+  const b = $('collect'); b.disabled = true; b.textContent = 'Vérification en cours…';
   try { await api('/api/collect'); location.reload(); }
   catch (e) { alert('Échec : ' + e.message); b.disabled = false; b.textContent = 'Mettre à jour et vérifier sur Google'; }
 });

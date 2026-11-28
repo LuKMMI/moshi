@@ -13,44 +13,82 @@ const PITCH = {
   'Coiffure & beauté': ['Prenez soin de vous', 'Un moment de détente et des conseils personnalisés.'],
 };
 
-export function templateSite(p) {
+const KEY = process.env.GOOGLE_PLACES_API_KEY;
+
+// Photos et avis Google du commerce (Place Details « Enterprise + Atmosphere » : 1 000 gratuits/mois).
+// Google impose d'afficher l'auteur de chaque photo et avis : on garde les attributions.
+export async function googleExtras(p) {
+  if (!KEY || !p.google?.found) return { photos: [], reviews: [] };
+  const headers = { 'X-Goog-Api-Key': KEY };
+  let id = p.google.placeId;
+  if (!id) {
+    const r = await fetch('https://places.googleapis.com/v1/places:searchText', { method: 'POST',
+      headers: { ...headers, 'Content-Type': 'application/json', 'X-Goog-FieldMask': 'places.id' },
+      body: JSON.stringify({ textQuery: `${p.name} ${p.city}`, languageCode: 'fr', regionCode: 'FR', pageSize: 1 }) });
+    id = (await r.json()).places?.[0]?.id;
+    if (!id) return { photos: [], reviews: [] };
+  }
+  const d = await fetch(`https://places.googleapis.com/v1/places/${id}?languageCode=fr`, { headers: { ...headers, 'X-Goog-FieldMask': 'photos,reviews' } }).then(r => r.json());
+  const photos = await Promise.all((d.photos || []).slice(0, 4).map(async ph => {
+    const m = await fetch(`https://places.googleapis.com/v1/${ph.name}/media?maxWidthPx=1600&skipHttpRedirect=true`, { headers }).then(r => r.json());
+    return { url: m.photoUri, auteur: ph.authorAttributions?.[0]?.displayName || 'Google' };
+  }));
+  const reviews = (d.reviews || []).filter(r => r.rating >= 4 && r.text?.text).slice(0, 3)
+    .map(r => ({ note: r.rating, texte: r.text.text, auteur: r.authorAttribution?.displayName, quand: r.relativePublishTimeDescription }));
+  return { photos: photos.filter(x => x.url), reviews };
+}
+
+// Obligation légale (LCEN) : éditeur et hébergeur. L'hébergeur correspond à la publication Netlify.
+export const mentions = p => `Éditeur : ${p.legalName}, SIRET ${p.id}, ${p.address}. Directeur de la publication : [À compléter]. Hébergeur : Netlify, Inc., 512 2nd Street, Suite 200, San Francisco, CA 94107, États-Unis. Ce site ne dépose aucun cookie de suivi. Photos et avis : Google, droits réservés à leurs auteurs.`;
+
+export function templateSite(p, extras = { photos: [], reviews: [] }) {
   const [h, sub] = PITCH[p.branch] || ['Votre commerce de proximité', 'Un service de qualité, près de chez vous.'];
   const name = esc(title(p.name)), city = esc(title(p.city || ''));
   const phone = p.google?.phone ? `<a class="btn" href="tel:${esc(p.google.phone.replace(/\s/g, ''))}">Appeler le ${esc(p.google.phone)}</a>` : '';
   const rating = p.google?.rating ? `<p class="rating">★ ${esc(p.google.rating)} / 5 — ${esc(p.google.reviews)} avis Google</p>` : '';
   const map = p.lat ? `<iframe title="Plan d'accès" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox=${p.lon - 0.006},${p.lat - 0.004},${p.lon + 0.006},${p.lat + 0.004}&marker=${p.lat},${p.lon}"></iframe>` : '';
+  const [hero, ...gallery] = extras.photos;
+  const bg = hero ? `background:linear-gradient(#0008,#0008),url('${esc(hero.url)}') center/cover` : 'background:linear-gradient(135deg,var(--c),#2d7486)';
+  const photos = gallery.length ? `<section><h2>En images</h2><div class="gal">${gallery.map(ph => `<figure><img src="${esc(ph.url)}" alt="${name}" loading="lazy"><figcaption>Photo : ${esc(ph.auteur)}</figcaption></figure>`).join('')}</div></section>` : '';
+  const avis = extras.reviews.length ? `<section><h2>Ils en parlent</h2>${extras.reviews.map(r => `<blockquote>${'★'.repeat(r.note)}<p>${esc(r.texte)}</p><cite>${esc(r.auteur)}, ${esc(r.quand)} — avis Google</cite></blockquote>`).join('')}</section>` : '';
   return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${name} – ${city}</title><meta name="description" content="${name}, ${esc(p.branch)} à ${city}. ${esc(sub)}">
 <style>:root{--c:#1f4e5f;--a:#e8a33d}*{box-sizing:border-box}body{margin:0;font:17px/1.6 system-ui,sans-serif;color:#222;background:#fafaf7}
-header{background:linear-gradient(135deg,var(--c),#2d7486);color:#fff;padding:72px 20px;text-align:center}h1{margin:0 0 8px;font-size:clamp(2rem,6vw,3.2rem)}
+header{${bg};color:#fff;padding:96px 20px;text-align:center}h1{margin:0 0 8px;font-size:clamp(2rem,6vw,3.2rem)}
 .tag{opacity:.85;text-transform:uppercase;letter-spacing:.1em;font-size:.8rem}.btn{display:inline-block;margin-top:20px;background:var(--a);color:#222;padding:12px 22px;border-radius:999px;text-decoration:none;font-weight:600}
 main{max-width:900px;margin:auto;padding:40px 20px}section{margin-bottom:40px}h2{color:var(--c)}.rating{font-weight:600;color:#b07400}
-iframe{width:100%;height:320px;border:0;border-radius:12px}footer{text-align:center;padding:24px;color:#777;font-size:.85rem}</style></head><body>
+.gal{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}figure{margin:0}img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px}figcaption,cite{font-size:.75rem;color:#777}
+blockquote{margin:0 0 16px;padding:16px;background:#fff;border-left:4px solid var(--a);border-radius:8px;color:#b07400}blockquote p{color:#222;margin:6px 0}
+iframe{width:100%;height:320px;border:0;border-radius:12px}footer{text-align:center;padding:24px;color:#777;font-size:.85rem}footer details{max-width:700px;margin:8px auto 0;text-align:left}</style></head><body>
 <header><div class="tag">${esc(p.branch)} · ${city}</div><h1>${name}</h1><p>${esc(h)}</p>${phone}</header>
-<main><section><h2>Bienvenue</h2><p>${esc(sub)}</p>${rating}</section>
+<main><section><h2>Bienvenue</h2><p>${esc(sub)}</p>${rating}</section>${photos}${avis}
 <section><h2>Nous trouver</h2><p>${esc(p.address)}</p>${map}</section>
 <section><h2>Horaires</h2><p>[À compléter avec le commerçant]</p></section></main>
-<footer>© ${new Date().getFullYear()} ${name}</footer></body></html>`;
+<footer>© ${new Date().getFullYear()} ${name}<details><summary>Mentions légales</summary><p>${esc(mentions(p))}</p></details></footer>${hero ? `<!-- Photo d'en-tête : ${esc(hero.auteur)} via Google -->` : ''}</body></html>`;
 }
 
 const client = process.env.ANTHROPIC_API_KEY ? new Anthropic() : null;
 
 export async function generateSite(p) {
-  if (!client) return { html: templateSite(p), engine: 'modèle' };
+  const extras = await googleExtras(p).catch(e => { console.warn('Photos/avis Google :', e.message); return { photos: [], reviews: [] }; });
+  if (!client) return { html: templateSite(p, extras), engine: 'modèle' };
   const facts = { nom: p.name, raison_sociale: p.legalName, metier: p.branch, code_naf: p.naf, adresse: p.address, ville: p.city,
-    telephone: p.google?.phone, note_google: p.google?.rating, nombre_avis: p.google?.reviews, latitude: p.lat, longitude: p.lon };
+    telephone: p.google?.phone, note_google: p.google?.rating, nombre_avis: p.google?.reviews, latitude: p.lat, longitude: p.lon,
+    photos: extras.photos, avis_google: extras.reviews, mentions_legales: mentions(p) };
   const msg = await client.beta.messages.stream({
     model: 'claude-opus-5-5', max_tokens: 64000,
     betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default',
     system: 'Tu es webdesigner pour les commerces de proximité en France. Tu réponds uniquement par un document HTML complet.',
     messages: [{ role: 'user', content: `Crée le site vitrine d'une page de ce commerce, en français :\n${JSON.stringify(facts, null, 1)}\n
 Contraintes : un seul fichier HTML avec CSS intégré, responsive, accessible, design soigné adapté au métier, sections accueil / services / avis / accès (carte OpenStreetMap en iframe si coordonnées) / contact.
+Utilise les photos fournies (URL telles quelles, avec "Photo : <auteur>" en légende) et cite les avis Google fournis mot pour mot avec leur auteur et la mention "avis Google".
+Ajoute en pied de page une section "Mentions légales" reprenant exactement le texte mentions_legales.
 N'invente aucun fait vérifiable (prix, horaires, avis clients, diplômes) : mets des repères "[À compléter]" à la place. Pas de JavaScript externe ; seules les polices Google Fonts sont permises.` }],
   }).finalMessage();
-  if (msg.stop_reason === 'refusal') return { html: templateSite(p), engine: 'modèle (Claude a refusé)' };
+  if (msg.stop_reason === 'refusal') return { html: templateSite(p, extras), engine: 'modèle (Claude a refusé)' };
   const text = msg.content.filter(b => b.type === 'text').map(b => b.text).join('');
   const html = text.slice(text.search(/<!doctype|<html/i)).replace(/```\s*$/, '');
-  return html.includes('</html>') ? { html, engine: 'Claude' } : { html: templateSite(p), engine: 'modèle (réponse incomplète)' };
+  return html.includes('</html>') ? { html, engine: 'Claude' } : { html: templateSite(p, extras), engine: 'modèle (réponse incomplète)' };
 }
 
 // E-mail, SMS et script d'appel de démarchage pour un prospect.

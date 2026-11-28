@@ -30,11 +30,14 @@ export function branchOf(naf = '') {
 }
 
 // Note de priorité : bonne réputation Google + beaucoup d'avis = client crédible qui gagne à avoir un site.
+// Un commerce "Facebook seulement" sait déjà que le web compte : prospect chaud, bonus x1,5.
 export function score(p) {
   if (p.website === 'oui') return 0;
-  const g = p.google;
-  return g?.rating ? Math.round(g.rating * Math.log10(1 + g.reviews) * 10) / 10 : 0;
+  const g = p.google, s = g?.rating ? g.rating * Math.log10(1 + g.reviews) : 0;
+  return Math.round(s * (p.website === 'facebook' ? 1.5 : 1) * 10) / 10;
 }
+
+export const isSocial = url => /^https?:\/\/([\w-]+\.)?(facebook|fb|instagram|linktr)\.(com|me|ee)\b/i.test(url || '');
 
 const norm = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -106,7 +109,7 @@ async function google(p) {
     method: 'POST', body: JSON.stringify(body),
     headers: {
       'Content-Type': 'application/json', 'X-Goog-Api-Key': GOOGLE_KEY,
-      'X-Goog-FieldMask': 'places.displayName,places.rating,places.userRatingCount,places.websiteUri,places.nationalPhoneNumber,places.googleMapsUri,places.businessStatus',
+      'X-Goog-FieldMask': 'places.id,places.displayName,places.rating,places.userRatingCount,places.websiteUri,places.nationalPhoneNumber,places.googleMapsUri,places.businessStatus',
     },
   });
   const g = d.places?.[0];
@@ -114,35 +117,40 @@ async function google(p) {
   const words = norm(p.name).split(' ').filter(w => w.length > 2);
   if (!g || !words.some(w => norm(g.displayName?.text).includes(w))) return { found: false, checkedAt: Date.now() };
   return {
-    found: true, name: g.displayName?.text, rating: g.rating ?? null, reviews: g.userRatingCount ?? 0,
+    found: true, placeId: g.id, name: g.displayName?.text, rating: g.rating ?? null, reviews: g.userRatingCount ?? 0,
     website: g.websiteUri ?? null, phone: g.nationalPhoneNumber ?? null, mapsUrl: g.googleMapsUri, status: g.businessStatus, checkedAt: Date.now(),
   };
 }
 
 async function main() {
-  const old = new Map((await readFile(OUT, 'utf8').catch(() => readFile(new URL('./data/seed.json', import.meta.url), 'utf8')).then(JSON.parse)).prospects.map(p => [p.id, p]));
-  const found = await fromRegistry();
-  const osm = await osmWebsites();
+  const prev = await readFile(OUT, 'utf8').catch(() => readFile(new URL('./data/seed.json', import.meta.url), 'utf8')).then(JSON.parse);
+  const old = new Map(prev.prospects.map(p => [p.id, p]));
+  // L'annuaire bouge peu : on ne le recharge (plusieurs minutes) qu'une fois par mois ou sur demande.
+  const annuaireAt = prev.annuaireAt || prev.updatedAt;
+  const refresh = process.argv.includes('--annuaire') || Date.now() - Date.parse(annuaireAt) > 30 * 864e5;
+  const found = refresh ? await fromRegistry() : old;
+  const osm = refresh ? await osmWebsites() : null;
   let calls = 0;
   // Le quota Google gratuit va d'abord aux métiers qui ont le plus besoin d'une vitrine.
   const first = ['Restaurants & cafés', 'Coiffure & beauté', 'Métiers de bouche', 'Boutiques & mode', 'Hôtels & hébergements', 'Garages & automobile'];
   const rank = p => (first.indexOf(p.branch) + first.length + 1) % (first.length + 1);
   for (const p of [...found.values()].sort((a, b) => rank(a) - rank(b))) {
-    const prev = old.get(p.id);
-    if (prev?.google) p.google = prev.google;
-    if (prev?.siteGenerated) p.siteGenerated = prev.siteGenerated;
+    const before = old.get(p.id);
+    if (before?.google) p.google = before.google;
+    if (before?.siteGenerated) p.siteGenerated = before.siteGenerated;
     if (GOOGLE_KEY && !p.google && calls < GOOGLE_LIMIT) {
       calls++;
       try { p.google = await google(p); } catch (e) { console.warn(`Google ${p.name} :`, e.message); }
       process.stdout.write(`\rGoogle ${calls}/${GOOGLE_LIMIT}   `);
     }
-    p.website = p.google?.website ? 'oui' : osm.has(norm(p.name)) ? 'oui' : p.google?.found ? 'non' : 'inconnu';
-    if (p.google?.website || osm.has(norm(p.name))) p.websiteUrl = p.google?.website || 'OpenStreetMap';
+    const url = p.google?.website, inOsm = osm ? osm.has(norm(p.name)) : p.websiteUrl === 'OpenStreetMap';
+    p.website = url ? (isSocial(url) ? 'facebook' : 'oui') : inOsm ? 'oui' : p.google?.found ? 'non' : 'inconnu';
+    p.websiteUrl = url || (inOsm ? 'OpenStreetMap' : undefined);
     p.score = score(p);
   }
   const prospects = [...found.values()].sort((a, b) => a.branch.localeCompare(b.branch) || b.score - a.score);
-  await writeFile(OUT, JSON.stringify({ updatedAt: new Date().toISOString(), department: DEPT, prospects }, null, 1));
-  console.log(`\n${prospects.length} prospects écrits dans data/prospects.json (${calls} appels Google)`);
+  await writeFile(OUT, JSON.stringify({ updatedAt: new Date().toISOString(), annuaireAt: refresh ? new Date().toISOString() : annuaireAt, department: DEPT, prospects }, null, 1));
+  console.log(`\n${prospects.length} prospects écrits dans data/prospects.json (${calls} appels Google${refresh ? ', annuaire rechargé' : ''})`);
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) await main();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) await main();

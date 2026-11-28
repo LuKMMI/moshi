@@ -5,3 +5,4 @@ sites/*
 graphify-out/cache/
 data/prospects.json
 data/suivi.json
+data/sauvegardes/

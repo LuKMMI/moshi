@@ -49,6 +49,18 @@ Cliquez sur un nom ou sur **Fiche** :
 
 Vos données (`data/prospects.json`, `data/suivi.json`, `sites/`, `.env`) restent sur votre ordinateur et ne sont jamais envoyées sur GitHub ; `data/seed.json` est la liste de départ.
 
+## Autres fonctions
+
+- **🗺 Carte** : les prospects affichés (filtrez par ville) pour préparer une tournée ; couleur = statut.
+- **📊 Statistiques** : contactés, intéressés, signés et chiffre d'affaires par métier.
+- **⬇ Exporter (Excel)** : vos prospects suivis en CSV (`/api/export.csv?tout` pour toute la liste). Le suivi est aussi sauvegardé à chaque lancement dans `data/sauvegardes/` (30 derniers jours).
+- **Facebook seulement 🔥** : commerces dont la seule présence web est une page Facebook/Instagram, prioritaires.
+- **Sites à moderniser** : filtre « Avec site », puis *Analyser le site actuel* (Google PageSpeed, gratuit ; activez « PageSpeed Insights API » dans le même projet Google Cloud).
+- **Nom de domaine libre ?** : vérifie `.fr` et `.com` dans les registres officiels (RDAP).
+- **Maquettes** : jusqu'à 4 photos et 3 avis Google réels du commerce (avec leurs auteurs, comme l'exige Google), et des mentions légales en pied de page.
+- **Mise à jour rapide** : le bouton ne fait que la vérification Google ; l'annuaire est rechargé automatiquement une fois par mois (`node collect.mjs --annuaire` pour forcer).
+- **Sécurité** : l'interface n'est accessible que depuis votre ordinateur.
+
 ## Outils d'agent installés
 
 - `.claude/skills/ponytail` : [Ponytail](https://github.com/DietrichGebert/ponytail) (MIT), règles du « développeur senior paresseux ».

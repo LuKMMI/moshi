@@ -40,3 +40,22 @@ test('messages modèle : mentionne le lien de la maquette', async () => {
   const m = templateMessages({ name: 'CHEZ PAUL', city: 'LANGRES' }, 'https://x.netlify.app');
   assert.ok(m.email.includes('https://x.netlify.app') && m.sms.length <= 200);
 });
+
+test('Facebook seulement : détecté et prioritaire', async () => {
+  const { isSocial } = await import('./collect.mjs');
+  assert.ok(isSocial('https://www.facebook.com/salon') && isSocial('https://instagram.com/x') && !isSocial('https://salon-eva.fr'));
+  const g = { rating: 4.5, reviews: 40 };
+  assert.ok(score({ website: 'facebook', google: g }) > score({ website: 'non', google: g }));
+});
+
+test('export CSV et nom de domaine', async () => {
+  const { toCsv, slug } = await import('./server.mjs');
+  assert.equal(toCsv([['a;b', 'dit "oui"']]), '﻿"a;b";"dit ""oui"""');
+  assert.equal(slug("Boulangerie L'Épi d'Or"), 'boulangerie-l-epi-d-or');
+});
+
+test('site : avis Google échappés et mentions légales', () => {
+  const p = { name: 'EVA', legalName: 'EVA SARL', id: '12345678900011', city: 'Langres', branch: 'Autres', address: '1 rue' };
+  const html = templateSite(p, { photos: [{ url: 'https://x/a.jpg', auteur: 'Bob' }, { url: 'https://x/b.jpg', auteur: 'Ann' }], reviews: [{ note: 5, texte: '<img onerror=x>', auteur: 'Zoé', quand: 'il y a 1 mois' }] });
+  assert.ok(!html.includes('<img onerror') && html.includes('SIRET 12345678900011') && html.includes('Photo : Ann'));
+});
