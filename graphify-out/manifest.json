@@ -24,9 +24,9 @@
     "semantic_hash": ""
   },
   "server.mjs": {
-    "mtime": 1795446285.6296127,
-    "seen": 1795446356.1598637,
-    "ast_hash": "be73eb0751ba85d4fc7d394553ec2c46",
+    "mtime": 1795863781.4064548,
+    "seen": 1795863790.0489693,
+    "ast_hash": "5bb4cb6e3554af9e876e1909afed0e08",
     "semantic_hash": ""
   },
   "sitegen.mjs": {
@@ -54,9 +54,9 @@
     "semantic_hash": ""
   },
   "public/index.html": {
-    "mtime": 1795862697.8538828,
-    "seen": 1795862714.323758,
-    "ast_hash": "702ce8a4a17c8315f0b9d6f40cbe86f9",
+    "mtime": 1795863781.4070923,
+    "seen": 1795863790.0489779,
+    "ast_hash": "17c0c4b5cd42f364142e80c117bf4d84",
     "semantic_hash": ""
   },
   "data/prospects.json": {

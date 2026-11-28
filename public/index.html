@@ -25,7 +25,8 @@ button.go:disabled{opacity:.6;cursor:wait}a{color:var(--acc)}
 </style>
 </head>
 <body>
-<header><h1>Prospects Haute-Marne</h1><p class="sub" id="meta">Chargement…</p></header>
+<header><h1>Prospects Haute-Marne</h1><p class="sub" id="meta">Chargement…</p>
+<button class="go" id="collect" style="margin-top:8px">Mettre à jour et vérifier sur Google</button></header>
 <div class="bar">
   <input id="q" type="search" placeholder="Rechercher un nom, une ville…" aria-label="Recherche">
   <select id="city" aria-label="Ville"><option value="">Toutes les villes</option></select>
@@ -76,6 +77,12 @@ function render() {
     || '<p class="mute">Aucun prospect pour ces filtres.</p>';
 }
 
+$('collect').addEventListener('click', async () => {
+  const b = $('collect'); b.disabled = true; b.textContent = 'Collecte en cours (quelques minutes)…';
+  const r = await fetch('/api/collect', { method: 'POST' }).then(r => r.json()).catch(e => ({ error: e.message }));
+  if (r.error) { alert('Échec : ' + r.error); b.disabled = false; b.textContent = 'Mettre à jour et vérifier sur Google'; }
+  else location.reload();
+});
 $('list').addEventListener('click', async e => {
   const b = e.target.closest('button.go'); if (!b) return;
   b.disabled = true; b.textContent = 'Génération…';

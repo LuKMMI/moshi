@@ -2,10 +2,13 @@
 import { createServer } from 'node:http';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { extname } from 'node:path';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { generateSite } from './sitegen.mjs';
 
 const DATA = new URL('./data/prospects.json', import.meta.url);
 const TYPES = { '.html': 'text/html; charset=utf-8', '.json': 'application/json', '.js': 'text/javascript', '.css': 'text/css' };
+let collecting = false;
 const load = async () => JSON.parse(await readFile(DATA, 'utf8'));
 
 async function handle(req, res) {
@@ -21,6 +24,14 @@ async function handle(req, res) {
     p.siteGenerated = { at: new Date().toISOString(), engine };
     await writeFile(DATA, JSON.stringify(db, null, 1));
     return send(res, 200, { url: `/sites/${p.id}/`, engine });
+  }
+  if (url.pathname === '/api/collect' && req.method === 'POST') {
+    if (collecting) return send(res, 409, { error: 'collecte déjà en cours' });
+    collecting = true;
+    // La collecte tourne dans son propre processus ; les clés du .env sont héritées.
+    try { await promisify(execFile)(process.execPath, ['collect.mjs'], { cwd: new URL('.', import.meta.url), maxBuffer: 1 << 26 }); }
+    finally { collecting = false; }
+    return send(res, 200, { ok: true });
   }
   if (url.pathname === '/api/prospects') return send(res, 200, await load());
   // Fichiers statiques : interface (public/) et sites générés (sites/<siret>/).

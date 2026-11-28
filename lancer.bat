@@ -18,11 +18,6 @@ set /p AKEY=Collez votre cle Anthropic (sk-ant-...) puis Entree :
 echo Cles enregistrees.
 
 :collecte
-echo.
-set CHOIX=N
-set /p CHOIX=Mettre a jour la liste et verifier 30 commerces sur Google (gratuit) ? (O/N) : 
-if /i "%CHOIX%"=="O" call npm.cmd run collect
-
 :demarrer
 echo.
 echo Interface sur http://localhost:3000  -  fermez cette fenetre pour arreter.

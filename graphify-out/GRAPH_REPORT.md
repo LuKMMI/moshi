@@ -1,17 +1,17 @@
 # Graph Report - moshi  (2026-11-28)
 
 ## Corpus Check
-- 11 files · ~220,522 words
+- 11 files · ~220,676 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 5 file(s) not represented in the graph (top: (none) 3, .example 1, .bat 1)
 
 ## Summary
-- 59 nodes · 79 edges · 11 communities (8 shown, 3 thin omitted)
+- 61 nodes · 81 edges · 11 communities (8 shown, 3 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `6d085a61`
+- Built from commit: `21e630fd`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -30,15 +30,15 @@
 
 ## God Nodes (most connected - your core abstractions)
 1. `main()` - 6 edges
-2. `getJson()` - 5 edges
+2. `templateSite()` - 5 edges
 3. `fromRegistry()` - 5 edges
-4. `Prospects Haute-Marne` - 5 edges
-5. `templateSite()` - 5 edges
-6. `norm()` - 4 edges
-7. `osmWebsites()` - 4 edges
+4. `getJson()` - 5 edges
+5. `Prospects Haute-Marne` - 5 edges
+6. `handle()` - 4 edges
+7. `generateSite()` - 4 edges
 8. `google()` - 4 edges
-9. `handle()` - 4 edges
-10. `generateSite()` - 4 edges
+9. `norm()` - 4 edges
+10. `osmWebsites()` - 4 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `handle()` --calls--> `generateSite()`  [EXTRACTED]
@@ -54,7 +54,7 @@ Cohesion: 0.20
 Nodes (10): dependencies, @anthropic-ai/sdk@^1.12.0, name, private, scripts, collect, start, test (+2 more)
 
 ### Community 1 - "server.mjs"
-Cohesion: 0.28
+Cohesion: 0.22
 Nodes (5): DATA, handle(), load(), send(), TYPES
 
 ### Community 2 - "sitegen.mjs"
@@ -88,6 +88,6 @@ Nodes (5): Démarrage, Génération de site, Outils d'agent installés, Prospect
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `@anthropic-ai/sdk` connect `package.json` to `sitegen.mjs`?**
-  _High betweenness centrality (0.196) - this node is a cross-community bridge._
+  _High betweenness centrality (0.194) - this node is a cross-community bridge._
 - **Why does `templateSite()` connect `sitegen.mjs` to `collect.test.mjs`?**
-  _High betweenness centrality (0.017) - this node is a cross-community bridge._
+  _High betweenness centrality (0.015) - this node is a cross-community bridge._
