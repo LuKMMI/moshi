@@ -4,6 +4,8 @@ Trouve les commerces, artisans et PME de Haute-Marne (52) **sans site web**, les
 
 ## Démarrage
 
+**Windows :** double-cliquez sur `lancer.bat` (installe, demande les clés une fois, ouvre l'interface).
+
 ```bash
 npm install
 cp .env.example .env      # renseignez les clés (optionnelles)

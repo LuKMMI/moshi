@@ -55,7 +55,8 @@ function filtered() {
 function row(p) {
   const g = p.google;
   const rating = g?.rating ? `<span class="stars">★ ${g.rating}</span> <span class="mute">(${g.reviews} avis)</span>`
-    : `<span class="mute">${g ? 'pas de fiche Google' : 'non vérifié'}</span>`;
+    : `<span class="mute">${g ? 'pas de fiche Google' : 'non vérifié'}</span>`
+      + (g?.mapsUrl ? '' : ` · <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name + ' ' + p.city)}" target="_blank" rel="noopener">Maps</a>`);
   const web = { oui: `<span class="yes">a un site</span>`, non: `<span class="no">aucun site</span>`, inconnu: `<span class="mute">site inconnu</span>` }[p.website];
   const site = p.siteGenerated ? `<a href="/sites/${p.id}/" target="_blank">Voir le site</a> ` : '';
   return `<div class="row"><div><div class="name">${esc(p.name)}</div><div class="mute">${esc(p.address)}</div></div>

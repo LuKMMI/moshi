@@ -123,7 +123,10 @@ async function main() {
   const found = await fromRegistry();
   const osm = await osmWebsites();
   let calls = 0;
-  for (const p of found.values()) {
+  // Le quota Google gratuit va d'abord aux métiers qui ont le plus besoin d'une vitrine.
+  const first = ['Restaurants & cafés', 'Coiffure & beauté', 'Métiers de bouche', 'Boutiques & mode', 'Hôtels & hébergements', 'Garages & automobile'];
+  const rank = p => (first.indexOf(p.branch) + first.length + 1) % (first.length + 1);
+  for (const p of [...found.values()].sort((a, b) => rank(a) - rank(b))) {
     const prev = old.get(p.id);
     if (prev?.google) p.google = prev.google;
     if (prev?.siteGenerated) p.siteGenerated = prev.siteGenerated;

@@ -1,9 +1,9 @@
-# Graph Report - moshi  (2026-11-23)
+# Graph Report - moshi  (2026-11-28)
 
 ## Corpus Check
-- 11 files · ~220,437 words
+- 11 files · ~220,522 words
 - Verdict: corpus is large enough that graph structure adds value.
-- Unclassified: 4 file(s) not represented in the graph (top: (none) 3, .example 1)
+- Unclassified: 5 file(s) not represented in the graph (top: (none) 3, .example 1, .bat 1)
 
 ## Summary
 - 59 nodes · 79 edges · 11 communities (8 shown, 3 thin omitted)
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `c16ae0ee`
+- Built from commit: `6d085a61`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
